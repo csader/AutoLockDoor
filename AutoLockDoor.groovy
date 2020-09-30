@@ -32,6 +32,7 @@
  *
  *  1.0.1 Fixed null bug, removed "optional" from contact sensor (thanks @SoundersDude and @chipworkz)
  *  1.0.0 Initial Release
+ *  1.0.1 Fix debug reporting
  *
  */
 
