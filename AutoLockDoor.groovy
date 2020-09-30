@@ -2,7 +2,7 @@
  *  **************** Auto Lock Door ****************
  *
  *  Design Usage:
- *  Automatically locks a specific door after X minutes when closed and unlocks it when open after X seconds.
+ *  Automatically locks a specific door after X minutes when closed and unlocks it when open after X seconds. Requires a contact sensor to prevent auto locking when the door is open.
  *
  *  Copyright 2019-2020 Chris Sader (@chris.sader)
  *
@@ -30,13 +30,14 @@
  *
  *  Changes:
  *
+ *  1.0.1 Fixed null bug, removed "optional" from contact sensor (thanks @SoundersDude and @chipworkz)
  *  1.0.0 Initial Release
  *
  */
 
 def setVersion(){
     state.name = "Auto Lock Door"
-	state.version = "1.0.0"
+	state.version = "1.0.1"
 }
 
 definition(
@@ -59,8 +60,8 @@ preferences
     section("Lock it how many minutes later?") {
         input "minutesLater", "number", title: "Enter # Minutes"
     }
-    section("Lock it only when this door is closed. (optional)") {
-        input "openSensor", "capability.contactSensor", title: "Choose Door Contact Sensor (optional)"
+    section("Lock it only when this door is closed.") {
+        input "openSensor", "capability.contactSensor", title: "Choose Door Contact Sensor"
     }
 }
 
@@ -114,7 +115,7 @@ def doorClosed(evt) {
 
 def doorHandler(evt)
 {
-    log.debug "Door ${openSensor.latestValue}"
+    log.debug "Door ${openSensor.latestValue("contact")}"
     log.debug "Lock ${evt.name} is ${evt.value}."
 
     if (evt.value == "locked") {                  // If the human locks the door then...
