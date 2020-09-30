@@ -1,9 +1,9 @@
 {
   "packageName": "Auto Lock Door",
   "author": "Chris Sader",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minimumHEVersion": "2.2.3",
-  "dateReleased": "2020-09-21",
+  "dateReleased": "2020-09-20",
   "apps": [
     {
       "id": "673fa73a-8064-4cb7-a0a9-8070cd0fc436",
