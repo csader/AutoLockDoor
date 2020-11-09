@@ -30,21 +30,22 @@
  *
  *  Changes:
  *
+ *  1.0.2 Added toggle for debug and seconds
  *  1.0.1 Fixed null bug, removed "optional" from contact sensor (thanks @SoundersDude and @chipworkz)
  *  1.0.0 Initial Release
  *
  */
 
 def setVersion(){
-    state.name = "Auto Lock Door"
-	state.version = "1.0.1"
+    state.name = "Auto Lock Door - test"
+	state.version = "1.0.2"
 }
 
 definition(
-    name: "Auto Lock Door",
+    name: "Auto Lock Door - test",
     namespace: "chris.sader",
     author: "Chris Sader",
-    description: "Automatically locks a specific door after X minutes when closed and unlocks it when open after X seconds.",
+    description: "Automatically locks a specific door after X minutes/seconds when closed and unlocks it when open after X seconds.",
     tag: "Locks",
     iconUrl: "http://www.gharexpert.com/mid/4142010105208.jpg",
     iconX2Url: "http://www.gharexpert.com/mid/4142010105208.jpg",
@@ -57,12 +58,31 @@ preferences
     section("When a door unlocks...") {
         input "lock1", "capability.lock"
     }
-    section("Lock it how many minutes later?") {
-        input "minutesLater", "number", title: "Enter # Minutes"
+    section("Lock it how many minutes/seconds later?") {
+        input "duration", "number", title: "Enter # minutes/seconds"
     }
+    section() {
+        input (
+		type:               "bool",
+		name:               "minSec",
+		title:              "Default is minutes. Use seconds instead?",
+		required:           true,
+		defaultValue:       false
+	       )
+        }
     section("Lock it only when this door is closed.") {
         input "openSensor", "capability.contactSensor", title: "Choose Door Contact Sensor"
     }
+    section() {
+        input (
+		type:               "bool",
+		name:               "enableDebugLogging",
+		title:              "Enable Debug Logging?",
+		required:           true,
+		defaultValue:       true
+	       )
+        }
+    
 }
 
 def installed()
@@ -86,7 +106,7 @@ def initialize()
     subscribe(openSensor, "contact.closed", doorClosed)
     subscribe(openSensor, "contact.open", doorOpen)
 }
-
+    
 def lockDoor()
 {
     log.debug "Locking Door if Closed"
@@ -95,18 +115,29 @@ def lockDoor()
     	lock1.lock()
     } else {
     	if ((openSensor.latestValue("contact") == "open")) {
-        def delay = minutesLater * 60
-        log.debug "Door open will try again in $minutesLater minutes"
+	if (minSec) {
+	def delay = duration
+        log.debug "Door open will try again in $duration second(s)"
         runIn( delay, lockDoor )
-        }
+	} else {
+	    def delay = duration * 60
+	    log.debug "Door open will try again in $duration minute(s)"
+            runIn( delay, lockDoor )
+	}
     }
+}
 }
 
 def doorOpen(evt) {
     log.debug "Door open reset previous lock task..."
     unschedule( lockDoor )
-    def delay = minutesLater * 60
-    runIn( delay, lockDoor )
+    if (minSec) {
+	def delay = duration
+        runIn( delay, lockDoor )
+	} else {
+	    def delay = duration * 60
+            runIn( delay, lockDoor )
+	}
 }
 
 def doorClosed(evt) {
@@ -123,8 +154,14 @@ def doorHandler(evt)
         unschedule( lockDoor )                  // ...we don't need to lock it later.
     }
     else {                                      // If the door is unlocked then...
-        def delay = minutesLater * 60          // runIn uses seconds
-        log.debug "Re-arming lock in ${minutesLater} minutes (${delay}s)."
-        runIn( delay, lockDoor )                // ...schedule to lock in x minutes.
+        if (minSec) {
+	    def delay = duration
+        log.debug "Re-arming lock in in $duration second(s)"
+        runIn( delay, lockDoor )
+	    } else {
+	    def delay = duration * 60
+	    log.debug "Re-arming lock in in $duration minute(s)"
+            runIn( delay, lockDoor )
+	    }
     }
 }
