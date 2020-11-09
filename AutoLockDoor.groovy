@@ -37,12 +37,12 @@
  */
 
 def setVersion(){
-    state.name = "Auto Lock Door - test"
+    state.name = "Auto Lock Door"
 	state.version = "1.0.2"
 }
 
 definition(
-    name: "Auto Lock Door - test",
+    name: "Auto Lock Door",
     namespace: "chris.sader",
     author: "Chris Sader",
     description: "Automatically locks a specific door after X minutes/seconds when closed and unlocks it when open after X seconds.",
