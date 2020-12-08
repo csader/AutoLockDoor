@@ -53,8 +53,13 @@ definition(
     importUrl: "https://github.com/csader/AutoLockDoor/blob/master/AutoLockDoor.groovy"
 )
 
-preferences
-{
+preferences {
+    page(name: "page1")
+}
+
+def page1() {
+  state.isDebug = isDebug
+    dynamicPage(name: "page1", install: true, uninstall: true) {
     section("When a door unlocks...") {
         input "lock1", "capability.lock"
     }
@@ -73,21 +78,15 @@ preferences
     section("Lock it only when this door is closed.") {
         input "openSensor", "capability.contactSensor", title: "Choose Door Contact Sensor"
     }
-    section() {
-        input (
-		type:               "bool",
-		name:               "enableDebugLogging",
-		title:              "Enable Debug Logging?",
-		required:           true,
-		defaultValue:       true
-	       )
-        }
-    
+    section("") {
+       input "isDebug", "bool", title: "Enable Debug Logging", required: false, multiple: false, defaultValue: false, submitOnChange: true
+    }
+    } 
 }
 
 def installed()
 {
-    log.debug "Auto Lock Door installed."
+    ifDebug("Auto Lock Door installed.")
     initialize()
 }
 
@@ -95,13 +94,13 @@ def updated()
 {
     unsubscribe()
     unschedule()
-    log.debug "Auto Lock Door updated."
+    ifDebug("Auto Lock Door updated.")
     initialize()
 }
 
 def initialize()
 {
-    log.debug "Settings: ${settings}"
+    ifDebug("Settings: ${settings}")
     subscribe(lock1, "lock", doorHandler)
     subscribe(openSensor, "contact.closed", doorClosed)
     subscribe(openSensor, "contact.open", doorOpen)
@@ -109,19 +108,19 @@ def initialize()
     
 def lockDoor()
 {
-    log.debug "Locking Door if Closed"
+    ifDebug("Locking Door if Closed")
     if((openSensor.latestValue("contact") == "closed")){
-    	log.debug "Door Closed"
+    	ifDebug("Door Closed")
     	lock1.lock()
     } else {
     	if ((openSensor.latestValue("contact") == "open")) {
 	if (minSec) {
 	def delay = duration
-        log.debug "Door open will try again in $duration second(s)"
+        ifDebug("Door open will try again in $duration second(s)")
         runIn( delay, lockDoor )
 	} else {
 	    def delay = duration * 60
-	    log.debug "Door open will try again in $duration minute(s)"
+	    ifDebug("Door open will try again in $duration minute(s)")
             runIn( delay, lockDoor )
 	}
     }
@@ -129,7 +128,7 @@ def lockDoor()
 }
 
 def doorOpen(evt) {
-    log.debug "Door open reset previous lock task..."
+    ifDebug("Door open reset previous lock task...")
     unschedule( lockDoor )
     if (minSec) {
 	def delay = duration
@@ -141,27 +140,31 @@ def doorOpen(evt) {
 }
 
 def doorClosed(evt) {
-    log.debug "Door Closed"
+    ifDebug("Door Closed")
 }
 
 def doorHandler(evt)
 {
-    log.debug "Door ${openSensor.latestValue("contact")}"
-    log.debug "Lock ${evt.name} is ${evt.value}."
+    ifDebug("Door ${openSensor.latestValue("contact")}")
+    ifDebug("Lock ${evt.name} is ${evt.value}.")
 
     if (evt.value == "locked") {                  // If the human locks the door then...
-        log.debug "Cancelling previous lock task..."
+        ifDebug("Cancelling previous lock task...")
         unschedule( lockDoor )                  // ...we don't need to lock it later.
     }
     else {                                      // If the door is unlocked then...
         if (minSec) {
 	    def delay = duration
-        log.debug "Re-arming lock in in $duration second(s)"
+        ifDebug("Re-arming lock in in $duration second(s)")
         runIn( delay, lockDoor )
 	    } else {
 	    def delay = duration * 60
-	    log.debug "Re-arming lock in in $duration minute(s)"
+	    ifDebug("Re-arming lock in in $duration minute(s)")
             runIn( delay, lockDoor )
 	    }
     }
+}
+
+private ifDebug(msg) {  
+    if (msg && state.isDebug)  log.debug 'Auto Lock Door: ' + msg  
 }
