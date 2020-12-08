@@ -30,6 +30,7 @@
  *
  *  Changes:
  *
+ *  1.0.3 Fixed debug toggle (thanks @lewis.heidrick)
  *  1.0.2 Added toggle for debug and seconds
  *  1.0.1 Fixed null bug, removed "optional" from contact sensor (thanks @SoundersDude and @chipworkz)
  *  1.0.0 Initial Release
@@ -38,7 +39,7 @@
 
 def setVersion(){
     state.name = "Auto Lock Door"
-	state.version = "1.0.2"
+	state.version = "1.0.3"
 }
 
 definition(
